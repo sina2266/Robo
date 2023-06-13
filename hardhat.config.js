@@ -9,7 +9,9 @@ const accounts = {
 /** @type import('hardhat/config').HardhatUserConfig */
 
 module.exports = {
-  solidity: "0.8.12",
+  solidity: {
+    compilers: [{ version: "0.8.12" }, { version: "0.6.6" }],
+  },
   networks: {
     fantomtest: {
       url: "https://rpc.testnet.fantom.network",

@@ -1,16 +1,17 @@
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract SMToken is ERC20 {
     using SafeMath for uint256;
 
-    uint256 public totalSupply;
-    uint256 public reserveBalance;
+    uint256 internal reserveBalance;
+    uint8 constant DECIMALS = 1;
 
     constructor() ERC20("SinaMirshafieiToken", "SMT") {
-        totalSupply = 1;
+        _mint(msg.sender, 1);
         reserveBalance = 1; //Charge the smart contract at the begining
     }
 
@@ -24,7 +25,7 @@ contract SMToken is ERC20 {
         require(amountToMint > 0, "Insufficient Ether sent.");
 
         _mint(msg.sender, amountToMint);
-        totalSupply += amountToMint;
+        //        totalSupply += amountToMint;
         reserveBalance += msg.value;
     }
 
@@ -36,7 +37,7 @@ contract SMToken is ERC20 {
         require(refundAmount > 0, "Insufficient token balance.");
 
         _burn(msg.sender, amount);
-        totalSupply -= amount;
+        //totalSupply -= amount;
         reserveBalance -= refundAmount;
 
         (bool success, ) = payable(msg.sender).call{value: refundAmount}("");
@@ -46,7 +47,7 @@ contract SMToken is ERC20 {
     function calculatePurchaseAmount(
         uint256 amount
     ) public view returns (uint256) {
-        uint256 newTotal = totalSupply.add(amount);
+        uint256 newTotal = totalSupply().add(amount);
         uint256 newPrice = ((newTotal * newTotal) / DECIMALS) *
             (newTotal / DECIMALS);
 
@@ -54,14 +55,14 @@ contract SMToken is ERC20 {
     }
 
     function calculateSaleRefund(uint256 amount) public view returns (uint256) {
-        uint256 newTotal = totalSupply.sub(amount);
+        uint256 newTotal = totalSupply().sub(amount);
         uint256 newPrice = ((newTotal * newTotal) / DECIMALS) *
             (newTotal / DECIMALS);
 
         return reserveBalance - (sqrt(newPrice) * 2) / 3;
     }
 
-    function sqrt(uint256 x) returns pure (uint256 y) {
+    function sqrt(uint256 x) internal pure returns (uint256 y) {
         uint256 z = (x + 1) / 2;
         y = x;
         while (z < y) {
